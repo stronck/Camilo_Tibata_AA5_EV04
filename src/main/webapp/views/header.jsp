@@ -1,0 +1,1 @@
+<%@ page contentType="text/html;charset=UTF-8" %><header><h1>ControlStock</h1><nav><a href="<%=request.getContextPath()%>/dashboard">Inicio</a><a href="<%=request.getContextPath()%>/clientes">Clientes</a><a href="<%=request.getContextPath()%>/productos">Productos</a><a href="<%=request.getContextPath()%>/ventas">Ventas</a></nav></header>

@@ -1,0 +1,1 @@
+<footer><p>ControlStock · API REST con Java Servlet/JSP</p></footer>
