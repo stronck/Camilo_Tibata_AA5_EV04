@@ -1,7 +1,35 @@
 package com.controlstock.dao;
-import com.controlstock.model.*; import java.sql.*; import java.util.*;
+
+// Capa de acceso a datos para registrar y consultar ventas.
+import com.controlstock.model.*;
+import java.sql.*;
+import java.util.*;
+
 public class VentaDAO {
-  public List<Venta> listar()throws SQLException{List<Venta> r=new ArrayList<>();try(Connection c=Database.getConnection();Statement s=c.createStatement();ResultSet x=s.executeQuery("SELECT id,cliente_id,producto_id,cantidad,total,CAST(fecha AS VARCHAR) fecha FROM ventas ORDER BY id DESC")){while(x.next())r.add(new Venta(x.getInt("id"),x.getInt("cliente_id"),x.getInt("producto_id"),x.getInt("cantidad"),x.getDouble("total"),x.getString("fecha")));}return r;}
-  public int guardar(Venta v)throws SQLException{Producto p=new ProductoDAO().buscarPorId(v.getProductoId());if(p==null)throw new SQLException("Producto no encontrado");if(v.getCantidad()<=0||p.getStock()<v.getCantidad())throw new SQLException("Cantidad o stock inválido");new ProductoDAO().descontarStock(p.getId(),v.getCantidad());v.setTotal(p.getPrecio()*v.getCantidad());try(Connection c=Database.getConnection();PreparedStatement q=c.prepareStatement("INSERT INTO ventas(cliente_id,producto_id,cantidad,total) VALUES(?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){q.setInt(1,v.getClienteId());q.setInt(2,v.getProductoId());q.setInt(3,v.getCantidad());q.setDouble(4,v.getTotal());q.executeUpdate();try(ResultSet x=q.getGeneratedKeys()){x.next();return x.getInt(1);}}}
-  public void eliminar(int id)throws SQLException{try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement("DELETE FROM ventas WHERE id=?")){p.setInt(1,id);p.executeUpdate();}}
+    // Recupera las ventas más recientes primero.
+    public List<Venta> listar() throws SQLException {
+        List<Venta> r = new ArrayList<>();
+        try (Connection c = Database.getConnection(); Statement s = c.createStatement(); ResultSet x = s.executeQuery("SELECT id,cliente_id,producto_id,cantidad,total,CAST(fecha AS VARCHAR) fecha FROM ventas ORDER BY id DESC")) {
+            while (x.next()) r.add(new Venta(x.getInt("id"), x.getInt("cliente_id"), x.getInt("producto_id"), x.getInt("cantidad"), x.getDouble("total"), x.getString("fecha")));
+        }
+        return r;
+    }
+
+    // Valida el producto y el stock, calcula el total y registra la venta.
+    public int guardar(Venta v) throws SQLException {
+        Producto p = new ProductoDAO().buscarPorId(v.getProductoId());
+        if (p == null) throw new SQLException("Producto no encontrado");
+        if (v.getCantidad() <= 0 || p.getStock() < v.getCantidad()) throw new SQLException("Cantidad o stock inválido");
+        new ProductoDAO().descontarStock(p.getId(), v.getCantidad());
+        v.setTotal(p.getPrecio() * v.getCantidad());
+        try (Connection c = Database.getConnection(); PreparedStatement q = c.prepareStatement("INSERT INTO ventas(cliente_id,producto_id,cantidad,total) VALUES(?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+            q.setInt(1, v.getClienteId()); q.setInt(2, v.getProductoId()); q.setInt(3, v.getCantidad()); q.setDouble(4, v.getTotal()); q.executeUpdate();
+            try (ResultSet x = q.getGeneratedKeys()) { x.next(); return x.getInt(1); }
+        }
+    }
+
+    // Elimina una venta por su identificador.
+    public void eliminar(int id) throws SQLException {
+        try (Connection c = Database.getConnection(); PreparedStatement p = c.prepareStatement("DELETE FROM ventas WHERE id=?")) { p.setInt(1, id); p.executeUpdate(); }
+    }
 }
